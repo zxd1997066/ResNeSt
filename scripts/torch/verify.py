@@ -214,6 +214,36 @@ def main():
 
                     if batch_idx >= max_iters -1:
                         break
+        elif args.precision == "float16":
+            with torch.cpu.amp.autocast(enabled=True, dtype=torch.half):
+                for batch_idx in range(max_iters):
+                    data = torch.randn(args.batch_size, 3, args.crop_size, args.crop_size)
+                    target = torch.arange(1, args.batch_size + 1).long()
+                    if args.cuda:
+                        data, target = data.cuda(), target.cuda()
+                    if args.channels_last:
+                        try:
+                            data, target = data.to(memory_format=torch.channels_last), target.to(memory_format=torch.channels_last)
+                        except:
+                            pass
+                    start = time.time()
+                    with torch.no_grad():
+                        if args.profile:
+                            with torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU], record_shapes=True) as prof:
+                                output = model(data)
+                        else:
+                            output = model(data)
+                    end = time.time()
+                    print("Iteration: {}, inference time: {} sec.".format(batch_idx, end - start), flush=True)
+                    if batch_idx >= args.warmup:
+                        batch_time.update(end - start)
+                        batch_time_list.append((end - start) * 1000)
+
+                    if batch_idx % 10 == 0:
+                        print('iters: {:d}/{:d}, {:0.3f}({:0.3f}).'.format(batch_idx + 1, max_iters, batch_time.val, batch_time.avg))
+
+                    if batch_idx >= max_iters -1:
+                        break
         else:
             for batch_idx in range(max_iters):
                 data = torch.randn(args.batch_size, 3, args.crop_size, args.crop_size)
