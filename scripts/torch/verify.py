@@ -63,6 +63,10 @@ class Options():
                             help='use dummy data')
         parser.add_argument('--channels_last', type=int, default=1, help='use channels last format')
         parser.add_argument('--profile', action='store_true', help='Trigger profile on current topology.')
+        parser.add_argument("--compile", action='store_true', default=False,
+                    help="enable torch.compile")
+        parser.add_argument("--backend", type=str, default='inductor',
+                    help="enable torch.compile backend")
         self.parser = parser
 
     def parse(self):
@@ -159,6 +163,8 @@ def main():
             data = torch.randn(args.batch_size, 3, args.crop_size, args.crop_size)
             model_oob = torch.jit.trace(model_oob, data.to(memory_format=torch.channels_last))
         model = model_oob
+    if args.compile:
+        model = torch.compile(model, backend=args.backend, options={"freezing": True})
 
     if args.ipex:
         if args.precision == "bfloat16":
