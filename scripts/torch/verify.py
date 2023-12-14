@@ -191,7 +191,7 @@ def main():
     if args.dummy:
         max_iters = args.max_iters + args.warmup
         if args.precision == "bfloat16":
-            with torch.cpu.amp.autocast(enabled=True, dtype=torch.bfloat16):
+            with torch.autocast(device_type="cuda" if torch.cuda.is_available() else "cpu", enabled=True, dtype=torch.bfloat16):
                 for batch_idx in range(max_iters):
                     data = torch.randn(args.batch_size, 3, args.crop_size, args.crop_size)
                     target = torch.arange(1, args.batch_size + 1).long()
@@ -221,7 +221,7 @@ def main():
                     if batch_idx >= max_iters -1:
                         break
         elif args.precision == "float16":
-            with torch.cpu.amp.autocast(enabled=True, dtype=torch.half):
+            with torch.autocast(device_type="cuda" if torch.cuda.is_available() else "cpu", enabled=True, dtype=torch.half):
                 for batch_idx in range(max_iters):
                     data = torch.randn(args.batch_size, 3, args.crop_size, args.crop_size)
                     target = torch.arange(1, args.batch_size + 1).long()
