@@ -67,6 +67,8 @@ class Options():
                     help="enable torch.compile")
         parser.add_argument("--backend", type=str, default='inductor',
                     help="enable torch.compile backend")
+        parser.add_argument("--triton_cpu", action='store_true', default=False,
+                    help="enable triton_cpu")
         self.parser = parser
 
     def parse(self):
@@ -97,7 +99,10 @@ def save_profile_result(filename, table):
 def main():
     # init the args
     args = Options().parse()
-
+    if args.triton_cpu:
+        print("run with triton cpu backend")
+        import torch._inductor.config
+        torch._inductor.config.cpu_backend="triton"
     if args.ipex:
         import intel_extension_for_pytorch as ipex
         print("Running with IPEX...")
