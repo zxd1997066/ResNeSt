@@ -97,6 +97,7 @@ def save_profile_result(filename, table):
 
 
 def main():
+    import torch
     # init the args
     args = Options().parse()
     if args.triton_cpu:
